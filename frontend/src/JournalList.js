@@ -4,11 +4,12 @@ import StarIcon from '@mui/icons-material/Star';
 
 const JournalList = () => {
     const [results, setResults] = useState([])
-    const url = 'http://localhost:8000/api/journals/'
+    const url = 'http://localhost:8000/api/journals/user/'
 
     useEffect(() => {
         async function getData() {
-            const response = await fetch(url);
+            const token = localStorage.getItem('token');
+            const response = await fetch(url, {headers: {'Authorization': `Token ${token}`}});
             const journals = await response.json();
             setResults(journals);
         }
