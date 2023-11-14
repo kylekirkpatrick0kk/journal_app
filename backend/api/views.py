@@ -5,10 +5,12 @@ from django.contrib.auth.models import User
 from rest_framework.permissions import IsAdminUser
 from .permissions import IsOwner
 
+
 class JournalList(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
     queryset = Journal.objects.all()
     serializer_class = JournalSerializer
+
 
 class JournalListOwner(generics.ListCreateAPIView):
     permission_classes = [IsOwner]
@@ -16,20 +18,25 @@ class JournalListOwner(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Filter the queryset to include only entries owned by the authenticated user
-        return Journal.objects.filter(owner=self.request.user).order_by('-created_date')
+        return Journal.objects.filter(owner=self.request.user).order_by(
+            "-created_date"
+        )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
         return super().perform_create(serializer)
+
 
 class JournalDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner]
     queryset = Journal.objects.all()
     serializer_class = JournalSerializer
 
+
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
 
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
