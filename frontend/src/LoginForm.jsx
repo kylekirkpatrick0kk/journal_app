@@ -23,7 +23,7 @@ function LoginForm() {
         if (response.ok) {
             // Save the token to local storage (or wherever you want to store it)
             localStorage.setItem('token', data.token);
-            navigate('/journals');
+            navigate('/my-journals/');
         } else {
             // Handle the error
             console.error(data);
