@@ -1,20 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, List, ListItem, ListItemText, Container, Paper, TextField } from '@mui/material';
+import { Typography, List, ListItem, ListItemText, Container, Paper, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 
 const JournalList = () => {
     const [results, setResults] = useState([])
-    const url = 'http://localhost:8000/api/journals/user/'
+    const [open, setOpen] = useState(false);
+    const [title, setTitle] = useState('');
+    const [entry, setEntry] = useState('');
+    const url = 'http://localhost:8000/api/journals/'
+
+    const decodeToken = (token) => {
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    };
 
     useEffect(() => {
-        async function getData() {
-            const token = localStorage.getItem('token');
-            const response = await fetch(url, {headers: {'Authorization': `Token ${token}`}});
-            const journals = await response.json();
-            setResults(journals);
-        }
         getData();
-    }, []);
+    }, [url]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+    const getData = async () => {
+        const access_token = localStorage.getItem('access_token');
+        const decodedToken = decodeToken(access_token);
+        const userId = decodedToken ? decodedToken.user_id : null;
+        const response = await fetch(`${url}${userId}/`, {headers: {'Authorization': `Bearer ${access_token}`}});
+        const journals = await response.json();
+        setResults(journals);
+    }
+
+    const handleOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleChangeTitle = (e) => {
+        setTitle(e.target.value);
+    };
+    
+    const handleChangeEntry = (e) => {
+        setEntry(e.target.value);
+    };
+    
+    const handleSubmit = async () => {
+        const access_token = localStorage.getItem('access_token');
+        const decodedToken = decodeToken(access_token);
+        const userId = decodedToken ? decodedToken.user_id : null;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, entry, owner: userId }),
+        });
+        if (response.ok) {
+            getData();
+            handleClose();
+        }
+    };
+
 
     return (
         <Container maxWidth="md">
@@ -22,6 +73,9 @@ const JournalList = () => {
                 <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>
                     My Journal Entries
                 </Typography>
+                <Button variant="contained" color="primary" onClick={handleOpen} style={{ marginTop: '20px' }}>
+                    Create
+                </Button>
                 <List>
                     {results.map(item => (
                         <ListItem key={item.id} style={{ border: '1px solid #ccc', borderRadius: '5px', marginBottom: '10px' }}>
@@ -53,6 +107,37 @@ const JournalList = () => {
                         </ListItem>
                     ))}
                 </List>
+                
+                <Dialog open={open} onClose={handleClose}>
+                    <DialogTitle>Create New Journal Entry</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            name="title"
+                            label="Title"
+                            type="text"
+                            fullWidth
+                            onChange={handleChangeTitle}
+                        />
+                        <TextField
+                            margin="dense"
+                            name="content"
+                            label="Content"
+                            type="text"
+                            fullWidth
+                            onChange={handleChangeEntry}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleClose} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSubmit} color="primary">
+                            Create
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Paper>
         </Container>
     );

@@ -5,11 +5,33 @@ from django.contrib.auth.models import User
 from rest_framework.permissions import IsAdminUser
 from .permissions import IsOwner
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token["user_id"] = user.id
+
+        return token
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
 
 class JournalList(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
+    # permission_classes = [IsAdminUser]
     queryset = Journal.objects.all()
     serializer_class = JournalSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+        return super().perform_create(serializer)
 
 
 class JournalListOwner(generics.ListCreateAPIView):
@@ -21,10 +43,6 @@ class JournalListOwner(generics.ListCreateAPIView):
         return Journal.objects.filter(owner=self.request.user).order_by(
             "-created_date"
         )
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-        return super().perform_create(serializer)
 
 
 class JournalDetail(generics.RetrieveUpdateDestroyAPIView):

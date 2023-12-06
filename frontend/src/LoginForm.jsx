@@ -10,7 +10,7 @@ function LoginForm() {
     const handleSubmit = async event => {
         event.preventDefault();
 
-        const response = await fetch('http://localhost:8000/api/auth/', {
+        const response = await fetch('http://localhost:8000/api/token/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -19,10 +19,11 @@ function LoginForm() {
         });
 
         const data = await response.json();
-
+    
         if (response.ok) {
             // Save the token to local storage (or wherever you want to store it)
-            localStorage.setItem('token', data.token);
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
             navigate('/my-journals/');
         } else {
             // Handle the error
