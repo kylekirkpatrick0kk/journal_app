@@ -98,6 +98,19 @@ const JournalList = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        const access_token = localStorage.getItem('access_token');
+        const response = await fetch(`${url}detail/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+            },
+        });
+        if (response.ok) {
+            getData();
+        }
+    };
+
     return (
         <Container maxWidth="md">
             <Paper style={{ padding: '20px', marginTop: '20px' }}>
@@ -123,6 +136,7 @@ const JournalList = () => {
                                                 <Typography variant="caption" color="textSecondary">
                                                     {new Date(item.created_date).toLocaleString()}
                                                 </Typography>
+                                                <Button onClick={() => handleDelete(item.id)}>Delete</Button>
                                             </div>
                                         </div>
                                         <TextField
