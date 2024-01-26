@@ -5,8 +5,10 @@ import StarIcon from '@mui/icons-material/Star';
 const JournalList = () => {
     const [results, setResults] = useState([])
     const [open, setOpen] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
     const [title, setTitle] = useState('');
     const [entry, setEntry] = useState('');
+    const [editingId, setEditingId] = useState(null);
     const url = 'http://localhost:8000/api/journals/'
 
     const decodeToken = (token) => {
@@ -36,9 +38,21 @@ const JournalList = () => {
         setOpen(true);
     };
 
+    const handleEditOpen = (id) => {
+        const item = results.find(item => item.id === id);
+        setTitle(item.title);
+        setEntry(item.entry);
+        setEditingId(id); // Set the editing id
+        setOpenEdit(true);
+    };
+
     const handleClose = () => {
         setOpen(false);
     };
+
+    const handleEditClose = () => {
+        setOpenEdit(false);
+    }
 
     const handleChangeTitle = (e) => {
         setTitle(e.target.value);
@@ -66,6 +80,23 @@ const JournalList = () => {
         }
     };
 
+    const handleSave = async () => {
+        const access_token = localStorage.getItem('access_token');
+        const decodedToken = decodeToken(access_token);
+        const userId = decodedToken ? decodedToken.user_id : null;
+        const response = await fetch(`${url}detail/${editingId}/`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, entry, owner: userId }),
+        });
+        if (response.ok) {
+            getData();
+            handleClose();
+        }
+    };
 
     return (
         <Container maxWidth="md">
@@ -87,6 +118,7 @@ const JournalList = () => {
                                                 {item.title}
                                             </Typography>
                                             <div>
+                                                <Button onClick={() => handleEditOpen(item.id)}>Edit</Button>
                                                 <StarIcon color={item.starred ? 'primary' : 'action'} />
                                                 <Typography variant="caption" color="textSecondary">
                                                     {new Date(item.created_date).toLocaleString()}
@@ -135,6 +167,38 @@ const JournalList = () => {
                         </Button>
                         <Button onClick={handleSubmit} color="primary">
                             Create
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={openEdit} onClose={handleEditClose}>
+                    <DialogTitle>Edit Journal Entry</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            id="title"
+                            label="Title"
+                            type="text"
+                            fullWidth
+                            value={title}
+                            onChange={handleChangeTitle}
+                        />
+                        <TextField
+                            margin="dense"
+                            id="entry"
+                            label="Entry"
+                            type="text"
+                            fullWidth
+                            value={entry}
+                            onChange={handleChangeEntry}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleEditClose} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSave} color="primary">
+                            Save
                         </Button>
                     </DialogActions>
                 </Dialog>

@@ -11,7 +11,7 @@ from api.views import (
 
 urlpatterns = [
     path("journals/", JournalList.as_view()),
-    path("journals/detail/<int:pk>", JournalDetail.as_view()),
+    path("journals/detail/<int:pk>/", JournalDetail.as_view()),
     path("journals/<int:user_id>/", JournalListOwner.as_view()),
     path("users/", UserList.as_view()),
     path("users/<int:pk>/", UserDetail.as_view()),
